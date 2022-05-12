@@ -1,24 +1,53 @@
+## How to create an SSH key
+
 create ssh connection from local to github
 
-cd .ssh
+- From terminal `cd .ssh`
 
-ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+- Enter `ssh-keygen -t rsa -b 4096 -C "your_email@example.com"`
 
-eng110_jack > no passphrase > key displayed
+  - The following prompt "Enter a file in which to save the key (/Users/you/.ssh/id_rsa):" Enter file name
+  - No passphrase - hit enter
 
-cat eng110_jack.pub > copy key
+- To access the public key enter `cat eng110_jack.pub` and copy the key
 
-github > settings > ssh and gpg keys > new key > name same as key > paste key
+## Saving the SSH key to Github
 
-github > repo > clone this repo > github ssh > git clone ssh > make a change > add/commit/push
+- From Github head to Settings then SSH and GPG keys
+
+- From SSH and GPG keys select new key
+- Name same as SSH key
+- Paste key from file.pub
+
+### Testing for success
+
+- From Github head to your repository
+- Clone the required repository
+  - Github ssh
+- From terminal `cd` into desired directory
+- `git clone` using the ssh
+- Make a change
+- `git add` > `git commit -m ""` > `git push`
+- If the change has been pushed then it worked as intended
 
 ## Creating a job on Jenkins
 
 By default runs on port 88
 
-Log into Jenkins(this is an EC2 instance on AWS) > new jobs(left) > name > freestyle job > configure > Discard old builds - 3 > add build step > select execute shell > enter commands > save
+- Log into Jenkins(this is an EC2 instance on AWS)
+- Select 'New jobs' found on the left hand side
 
-commands =
+  - Name as per usual
+  - Select 'Freestyle job'
+  - Select 'Configure' from the drop down list
+  - Add a description
+  - Check 'Discard old builds'
+  - Set 'Max instances' to 3
+  - Add 'Build step'
+  - Select 'Execute shell'
+  - Enter commands then save
+
+- Commands =
 
 ```
 # Which OS does it support?
@@ -34,35 +63,62 @@ date
 # Does it have node support?
 ```
 
-name > dropdown > build now
+- Select the drop down menu from the name of your build and select 'Build now'
 
-outcome = name > build history on left > drop down > console output
+- Select the name of your build and look for 'Build history' on left
 
-new build > execute shell = `printenv`
+- Select the job and from the drop down select 'Console output'
 
-on first job > configure > add post build actions > build other projects > name > trigger if build is stable
+## Linking builds together
 
-test jobs individually but they can be linked
+- Create a new build following the same steps as before
 
-github > repo > setting > deploy key > add deploy key > add key
+  - In commands enter `printenv`
 
-## Private key to Jenkins
+- On first build:
 
-ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+  - Select the job and from the drop down menu select 'Configure'
+  - Scroll down and fine 'Add post build actions'
+  - From the drop down menu select 'build other projects'
+    - Input the name of the build you wish to linke
+    - Check 'Trigger if build is stable'
 
-grab key
+- Ensure that before jobs are linked that each job has been tested individually so that you know they work
 
-github > repo > setting > deploy key > add deploy key > add key
+## Deploying a key on a Github repository
 
-github project check
+- From Github make your way to the repository that you want to deploy a key with
+- Head to the 'Settings'
+  - 'Deploy key'
+    - 'Add key'
+    - Paste the private key
 
-restrict where this project can be run > sparta-ubuntu-node
+## Giving Jenkins SSH access to the Github repository
 
-source code management > git > copy SSH > add key > jenkins > ssh username with private key > user name > private key > enter directly > key > print ssh
+- Create a new job for Jenkins
 
-build environment > Provide Node & npm bin/ folder to PATH
+- Configuration:
 
-build > commands >
+  - Check 'Discard old builds'
+  - Set 'Max instances' to 3
+  - Github project check
+    - Enter the Github URL (HTTPS)
+  - Restrict where this project can be run and enter sparta-ubuntu-node
+
+  - In 'Source code management':
+
+    - Select Git
+    - In 'Repositories' copy the SSH from the Github repository (Check SSH and copy)
+
+    - In 'Credentials' press 'Add' and select 'Jenkins'
+      - 'Kind' should be 'SSH Username with private key'
+      - 'Username' should be the same as the SSH name
+      - 'Private key' select 'enter directly'
+      - The key should be the public key (Found in .ssh `cat 'file'` - NOT the .pub) COPY EVERYTHING
+
+  - In 'Build environment' check 'Provide Node & npm bin/ folder to PATH'
+
+  - In 'Build' set the commands:
 
 ```
 cd starter-code/app
@@ -70,4 +126,4 @@ npm install
 npm test
 ```
 
-build job > console output
+- Build job and then check the console output
