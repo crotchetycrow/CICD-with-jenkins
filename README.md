@@ -142,3 +142,37 @@ npm test
   - Check 'Send me everything'
 
 - Tada!
+
+Make a request Jenkins clones the repo to the server
+
+Jenkins dashboard > CI job > configure > branch specifier change to dev branch
+post build actions > build other projects >
+
+3rd job
+ssh agent > pem file > ssh username > pem key
+
+## Building a job to merge branches
+
+- Create new build
+- Configuration:
+
+  - Check 'Discard old builds'
+  - Set 'Max instances' to 3
+  - Github project check
+    - Enter the Github URL (HTTPS)
+  - Restrict where this project can be run and enter sparta-ubuntu-node
+
+  - In 'Source code management':
+
+    - Select Git
+    - In 'Repositories/Repository URL' copy the SSH from the Github repository (Check SSH and copy)
+    - Add required credentials
+    - Change 'Branch Specifier' to required branch i.e. 'dev'
+    - Select 'Merge before build' from 'Additional Behaviours'
+      - Name of repository 'origin'
+      - Branch to merge to 'master'
+    - Check Github hook trigger for GITScm polling
+    - Post-build Actions check 'Push only if build succeeds' and 'Merge results'
+    - Save
+
+TEST
