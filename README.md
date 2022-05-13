@@ -177,4 +177,29 @@ ssh agent > pem file > ssh username > pem key
     - Post-build Actions check 'Push only if build succeeds' and 'Merge results'
     - Save
 
-TEST 5
+## Connecting Jenkins to AWS EC2
+
+- Build a new job
+- Configuration:
+
+  - Check 'Discard old builds'
+  - Set 'Max instances' to 3
+  - Restrict where this project can be run and enter sparta-ubuntu-node
+  - Check 'SSH Agent' and select 'eng119'
+  - Build with following commands:
+
+    ```
+    sudo ssh -A -o "StrictHostKeyChecking=no" ubuntu@ec2-ip << EOF
+
+    sudo apt-get update -y
+
+    sudo apt-get upgrade -y
+
+    sudo apt-get install nginx -y
+
+    sudo systemctl start nginx
+
+    sudo systemctl enable nginx
+    ```
+
+test 4
