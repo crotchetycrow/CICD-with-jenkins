@@ -142,3 +142,11 @@ npm test
   - Check 'Send me everything'
 
 - Tada!
+
+Make a request Jenkins clones the repo to the server
+
+Jenkins dashboard > CI job > configure > branch specifier change to dev branch
+post build actions > build other projects >
+
+3rd job
+ssh agent > pem file > ssh username > pem key
