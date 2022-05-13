@@ -153,6 +153,8 @@ ssh agent > pem file > ssh username > pem key
 
 ## Building a job to merge branches
 
+- Change job 1 'Branch specifier' to 'dev'
+
 - Create new build
 - Configuration:
 
