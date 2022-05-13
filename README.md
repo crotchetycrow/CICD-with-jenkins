@@ -127,3 +127,13 @@ npm test
 ```
 
 - Build job and then check the console output
+
+Github hook trigger for GITScm polling - tick
+
+github repo > settings > webhook > add new
+
+payload URL
+
+application/json
+
+send me everything
