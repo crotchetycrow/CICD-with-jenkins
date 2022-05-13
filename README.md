@@ -172,4 +172,5 @@ ssh agent > pem file > ssh username > pem key
       - Name of repository 'origin'
       - Branch to merge to 'master'
     - Check Github hook trigger for GITScm polling
+    - Post-build Actions check 'Push only if build succeeds' and 'Merge results'
     - Save
