@@ -128,12 +128,17 @@ npm test
 
 - Build job and then check the console output
 
-Github hook trigger for GITScm polling - tick
+## Creating a Github webhook
 
-github repo > settings > webhook > add new
+- On your Jenkins' build select configure
 
-payload URL
+  - Check Github hook trigger for GITScm polling
 
-application/json
+- On your Github repository head to 'Settings' then select 'Webhook'
 
-send me everything
+  - Select 'Add new'
+  - Enter the payload URL
+  - Select 'application/json' from the drop down menu
+  - Check 'Send me everything'
+
+- Tada!
