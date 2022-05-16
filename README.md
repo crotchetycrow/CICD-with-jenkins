@@ -108,7 +108,7 @@ date
   - In 'Source code management':
 
     - Select Git
-    - In 'Repositories' copy the SSH from the Github repository (Check SSH and copy)
+    - In 'Repositories/Repository URL' copy the SSH from the Github repository (Check SSH and copy)
 
     - In 'Credentials' press 'Add' and select 'Jenkins'
       - 'Kind' should be 'SSH Username with private key'
