@@ -80,7 +80,7 @@ date
   - Select the job and from the drop down menu select 'Configure'
   - Scroll down and fine 'Add post build actions'
   - From the drop down menu select 'build other projects'
-    - Input the name of the build you wish to linke
+    - Input the name of the build you wish to linked
     - Check 'Trigger if build is stable'
 
 - Ensure that before jobs are linked that each job has been tested individually so that you know they work
