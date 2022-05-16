@@ -188,18 +188,258 @@ ssh agent > pem file > ssh username > pem key
   - Check 'SSH Agent' and select 'eng119'
   - Build with following commands:
 
+    ````
+    # ssh into ec2
+    # update upgrade, run the provisioning script or install nginx to test
+    # scp to copy data from github to ec2
+    rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@ec2-52-18-33-32.eu-west-1.compute.amazonaws.com:~/.
+    ssh -A -o "StrictHostKeyChecking=no" ubuntu@52.18.33.32 << EOF
+
+        #export DB_HOST=mongodb://54.75.96.210:27017/posts
+        #sudo apt-get update -y
+        #sudo apt-get upgrade -y
+        #sudo apt-get install nginx -y
+        #sudo systemctl restart nginx
+        #sudo systemctl enable nginx
+      # scp -i eng110 -r ~/app ubuntu@ec2-52-18-33-32.eu-west-1.compute.amazonaws.com:/home/ubuntu/
+        #cd folder/env/app/
+        #sudo chmod +x provision.sh
+        #sudo /.provision.sh
+        #cd app
+        #npm install
+        #npm start
+
+        # pm2 kill all
+    EOF
+
+
+    # Create a another job for db
+    #```
+    # rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@ip:/home/ubuntu
+    # rsync -avz -e "ssh -o StrictHostKeyChecking=no" environment ubuntu@ip:/home/ubuntu
+    # ssh -o "StrictHostKeyChecking=no" ubuntu@ip <<EOF
+        #sudo bash ./environment/provision.sh
+        #cd app
+        #pm2 kill
+        #pm2 start app.js
+    #EOF
+    #```
+    ````
+
+We do not need to specify the pem file because Jenkins already has access.
+
+`rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@ec2-52-18-33-32.eu-west-1.compute.amazonaws.com:~/.` - this takes the app folder from the Github repository and transfers it to the EC2 instance
+
+`ssh -A -o "StrictHostKeyChecking=no" ubuntu@52.18.33.32` - this bypasses the yes/no section of ssh-ing into an EC2
+
+# Pipeline process from job 1 to job 4
+
+Standard configuration for all jobs:
+
+- Check 'Discard old builds'
+- Set 'Max instances' to 3
+- Github project check
+  - Enter the Github URL (HTTPS)
+- Restrict where this project can be run and enter 'sparta-ubuntu-node'
+
+- In 'Source code management':
+
+  - Select Git
+  - In 'Repositories/Repository URL' copy the SSH from the Github repository (Check SSH and copy)
+  - Add required credentials
+  - Check Github hook trigger for GITScm polling
+
+## CI
+
+Standard configuration
+
+- In 'Source code management':
+  - Branch specifier should be \*/dev
+- In 'Build environment':
+  - 'Provide Node & npm bin/ folder to PATH'
+- In 'Builds':
+  - Execute shell from drop down list
     ```
-    sudo ssh -A -o "StrictHostKeyChecking=no" ubuntu@ec2-ip << EOF
+    cd app
+    npm install
+    npm test
+    ```
+- In 'Post-build Actions':
+  - Choose 'Projects to build' from drop down list
+  - Enter CI Merge job name
+  - Check 'Trigger only if build is stable'
 
-    sudo apt-get update -y
+### CI Merge
 
-    sudo apt-get upgrade -y
+Standard configuration
 
-    sudo apt-get install nginx -y
+- In 'Source code management':
 
-    sudo systemctl start nginx
+  - Change 'Branch Specifier' to required branch i.e. 'dev'
+  - Select 'Merge before build' from 'Additional Behaviours'
+    - Name of repository 'origin'
+    - Branch to merge to 'master'
 
-    sudo systemctl enable nginx
+- In 'Post-build Actions':
+  - Choose 'Projects to build' from drop down list
+  - Enter CD MongoDB job name
+  - Check 'Trigger only if build is stable'
+  - Choose 'Git Publisher' from drop down list
+    - Select 'Push Only If Build Succeeds'
+    - Select 'Merge Results'
+
+### CD for the MongoDB
+
+Standard configuration
+
+- In 'Source code management':
+  - Branch specifier should be \*/master (or main)
+- In 'Build environment':
+  - 'SSH Agent'
+    - In 'Credentials' press 'Add' and select 'Jenkins'
+    - To add pem key:
+    - 'Kind' should be 'SSH Username with private key'
+    - 'Username' should be the same as the pem file name
+    - 'Private key' select 'enter directly'
+    - The key should be the pem key (Found in .ssh `cat 'file.pem'`) COPY EVERYTHING
+- In 'Builds':
+
+  - Execute shell from drop down list
+
+    ```
+    ssh -A -o "StrictHostKeyChecking=no" ubuntu@34.244.29.41 << EOF
+
+      sudo apt-get update -y
+
+      sudo apt-get upgrade -y
+
+      sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv D68FA50FEA312927
+
+      echo "deb https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+
+      sudo apt-get update -y
+
+      sudo apt-get upgrade -y
+
+      sudo apt-get install -y mongodb-org=3.2.20 mongodb-org-server=3.2.20 mongodb-org-shell=3.2.20 mongodb-org-mongos=3.2.20 mongodb-org-tools=3.2.20
+
+      sudo systemctl status mongod
+
+      sudo systemctl start mongod
+
+      sudo systemctl enable mongod
+
+      sudo chown ubuntu: /etc/.
+      sed '24d' /etc/mongod.conf -i
+      awk 'NR==24{print "  bindIp: 0.0.0.0"}7' /etc/mongod.conf > change && mv change /etc/mongod.conf
+      sudo chown root: /etc/.
+      sudo systemctl restart mongod
+      sudo systemctl enable mongod
+      sudo systemctl status mongod
     ```
 
-test 6
+  EOF
+
+  ```
+
+  ```
+
+- In 'Post-build Actions':
+  - Choose 'Projects to build' from drop down list
+  - Enter CD job name
+
+### CD
+
+Standard configuration
+
+- In 'Source code management':
+  - Branch specifier should be \*/master (or main)
+- In 'Build environment':
+  - 'SSH Agent'
+    - In 'Credentials' press 'Add' and select 'Jenkins'
+    - To add pem key:
+    - 'Kind' should be 'SSH Username with private key'
+    - 'Username' should be the same as the pem file name
+    - 'Private key' select 'enter directly'
+    - The key should be the pem key (Found in .ssh `cat 'file.pem'`) COPY EVERYTHING
+- In 'Builds':
+
+  - Execute shell from drop down list
+
+  ````
+      # ssh into ec2
+      # update upgrade, run the provisioning script or install nginx to test
+      # scp to copy data from github to ec2
+      rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@ec2-52-18-33-32.eu-west-1.compute.amazonaws.com:~/.
+      ssh -A -o "StrictHostKeyChecking=no" ubuntu@52.18.33.32 << EOF
+
+          export DB_HOST=mongodb://34.244.29.41:27017/posts
+
+          sudo echo "export DB_HOST=mongodb://34.244.29.41:27017/posts" >> ~/.bashrc
+
+          source ~/.bashrc
+
+          sudo apt-get update -y
+          sudo apt-get upgrade -y
+          sudo apt-get install nginx -y
+          sudo systemctl restart nginx
+          sudo systemctl enable nginx
+
+          cd app
+
+          curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
+
+        sudo apt-get install -y nodejs
+
+        sudo apt-get update -y
+
+        npm install
+
+        sudo node seeds/seed.js
+
+          nohup node app.js > /dev/null 2>&1 &
+
+          #cd app
+          #npm install
+          #npm start
+
+          # pm2 kill all
+      EOF
+
+
+      # Create a another job for db
+      #```
+      # rsync -avz -e "ssh -o StrictHostKeyChecking=no" app ubuntu@ip:/home/ubuntu
+      # rsync -avz -e "ssh -o StrictHostKeyChecking=no" environment ubuntu@ip:/home/ubuntu
+      # ssh -o "StrictHostKeyChecking=no" ubuntu@ip <<EOF
+          #sudo bash ./environment/provision.sh
+          #cd app
+          #pm2 kill
+          #pm2 start app.js
+      #EOF
+      #```
+  ````
+
+#### To reverse proxy
+
+```
+# Allows us to edit the file at /etc/nginx/sites-available/default
+    sudo chown ubuntu: /etc/nginx/sites-available/.
+
+    # Deletes lines 49-51 in the default file we now have permission to
+    sed '49,51d' /etc/nginx/sites-available/default -i
+    # Inserts all the necessary lines in the default file to set up a reverse proxy for nginx
+    awk 'NR==49{print "             proxy_pass http://localhost:3000;"}7' /etc/nginx/sites-available/default > change && mv change /etc/nginx/sites-available/default
+    awk 'NR==50{print "             proxy_http_version 1.1;"}7' /etc/nginx/sites-available/default > change && mv change /etc/nginx/sites-available/default
+    awk 'NR==51{print "             proxy_set_header Upgrade \$http_upgrade;"}7' /etc/nginx/sites-available/default > change && mv change /etc/nginx/sites-available/default
+    awk 'NR==52{print "             proxy_set_header Connection 'upgrade';"}7' /etc/nginx/sites-available/default > change && mv change /etc/nginx/sites-available/default
+    awk 'NR==53{print "             proxy_set_header Host \$host;"}7' /etc/nginx/sites-available/default > change && mv change /etc/nginx/sites-available/default
+    awk 'NR==54{print "             proxy_cache_bypass \$http_upgrade;"}7' /etc/nginx/sites-available/default > change && mv change /etc/nginx/sites-available/default
+
+    # Restores the permissions we changed to edit the default file
+    sudo chown root: /etc/nginx/sites-available/.
+    sudo chown root: /etc/nginx/sites-available/default
+
+    # restarts nginx as we have changed the default file
+    sudo systemctl restart nginx
+```
